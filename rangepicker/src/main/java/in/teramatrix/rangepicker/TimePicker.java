@@ -237,7 +237,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.module_menu_main, menu);
         // It's colour is black by default, making it white. I know this can be done in styles also :P
         menu.findItem(R.id.action_submit).getIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
         return true;
