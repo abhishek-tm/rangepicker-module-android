@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Range Picker</string>
+    <string name="dots">..............................................................................</string>
+
+    <color name="color_primary">#255283</color>
+    <color name="color_primary_dark">#163f67</color>
+    <color name="color_accent">#0397d8</color>
+    <color name="color_secondary">#5783b2</color>
+    <color name="window_background">#f2f7fa</color>
+</resources>
