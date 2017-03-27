@@ -2,6 +2,12 @@
 It is a simple range picker can be used in most common scenarios where you've to pick the range in hours. It has some presets for the hours and days like _last 12 hours to now_, _today_, _yesterday_ etc. There's no 'android.widget.ListView' or 'android.support.v7.widget.RecyclerView'. All the elements have been put in xml manually. So the layout is free to edit according to UI/theme of the application.
 
 If you really dont want to waste time on making a simple time range picker, this is good for you. In this version, there's not too much customizations in this library/time picker screen. But in future, customizations can be done according response of people.
+<div>
+<img src="/wiki/preset.png" width="280" alt="Presets"/>
+<img src="/wiki/custom.png" width="280" alt="Custom Time Selection"/>
+<img src="/wiki/calendar.png" width="280" alt="Custom Date Selection"/>
+</div>
+
 
 ### How to add library?
 
