@@ -126,9 +126,17 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
      */
     public static final String FROM = "FROM";
     /**
-     * A final tag input custom {@link Calendar} instance before opening the module.
+     * A final tag to input custom {@link Calendar} instance before opening time picker activity.
      */
-    public static final String TIME = "TIME";
+    public static final String DAY = "DAY";
+    /**
+     * This is to configure filter before opening it. This tag will be used to pass custom time format to this activity.
+     */
+    public static final String TIME_FORMAT = "TIME";
+    /**
+     * This is also a part of configuration. This tag will be used to pass custom date format to this activity.
+     */
+    public static final String DATE_FORMAT = "DATE";
     /**
      * This is the title of the screen. It will be set up into action bar of the activity.
      * It may be customizable in the next release so it has been declared global.
@@ -141,15 +149,17 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_time_picker);
         // Default setting of date time formats
-        timeFormat = new SimpleDateFormat("hh:mm a");
-        dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        dateFormat = getIntent().getSerializableExtra(DATE_FORMAT) == null ? new SimpleDateFormat("dd MMM yyyy")
+                : (SimpleDateFormat) getIntent().getSerializableExtra(DATE_FORMAT);
+        timeFormat = getIntent().getSerializableExtra(TIME_FORMAT) == null ? new SimpleDateFormat("HH:mm")
+                : (SimpleDateFormat) getIntent().getSerializableExtra(TIME_FORMAT);
 
         // A calendar to allow date selection
         calendarView = (MaterialCalendarView) findViewById(R.id.calendar);
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         calendarView.setPadding(0, getResources().getDimensionPixelSize(resourceId), 0, 0);
-        Calendar temp = getIntent().getSerializableExtra(TIME) != null
-                ? (Calendar) getIntent().getSerializableExtra(TIME)
+        Calendar temp = getIntent().getSerializableExtra(DAY) != null
+                ? (Calendar) getIntent().getSerializableExtra(DAY)
                 : Calendar.getInstance();
         calendarView.setSelectedDate(temp);
         calendarView.setCurrentDate(temp);
@@ -177,10 +187,6 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         // Adding offset listener to block app bar sliding on touch
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar_layout);
         appBarLayout.addOnOffsetChangedListener(this);
-
-        // No need of collapsing toolbar title here, removing it
-        CollapsingToolbarLayout collapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        collapsingToolbar.setTitleEnabled(false);
 
         // Initializing calendar view with the current date
         Calendar calendar = Calendar.getInstance();
@@ -216,23 +222,33 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         setTime(R.id.txt_from_24_hours, -24);
         setTime(R.id.txt_to_24_hours, currentTime);
 
+        Calendar manual = Calendar.getInstance();
+        manual.set(Calendar.HOUR, 0);
+        manual.set(Calendar.HOUR_OF_DAY, 0);
+        manual.set(Calendar.MINUTE, 0);
+        manual.set(Calendar.SECOND, 0);
+        manual.set(Calendar.MILLISECOND, 0);
+
         // for the custom time selection
         radioCustom = (RadioButton) findViewById(R.id.radio_custom);
         radioCustom.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_custom, FROM + "\n00:00 AM");
+        setTime(R.id.txt_from_custom, FROM + "\n" + timeFormat.format(manual.getTime()));
         setTime(R.id.txt_to_custom, TO + "\n" + currentTime);
 
         // for today's time range selection
         radioToday = (RadioButton) findViewById(R.id.radio_today);
         radioToday.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_today, "00:00 AM");
+        setTime(R.id.txt_from_today, timeFormat.format(manual.getTime()));
         setTime(R.id.txt_to_today, currentTime);
 
         // for the time range of previous day
         radioYesterday = (RadioButton) findViewById(R.id.radio_yesterday);
         radioYesterday.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_yesterday, "00:00 AM");
-        setTime(R.id.txt_to_yesterday, "11:59 PM");
+        setTime(R.id.txt_from_yesterday, timeFormat.format(manual.getTime()));
+
+        manual.set(Calendar.HOUR_OF_DAY, 23);
+        manual.set(Calendar.MINUTE, 59);
+        setTime(R.id.txt_to_yesterday, timeFormat.format(manual.getTime()));
     }
 
     @Override
@@ -289,6 +305,17 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
                 fromCal.setTime(calendarView.getSelectedDate().getDate());
                 fromCal.set(Calendar.HOUR_OF_DAY, from.getHours());
                 fromCal.set(Calendar.MINUTE, from.getMinutes());
+            }
+
+           // int min=
+
+            //Another check for milliseconds and seconds
+            //if user selects hour and minutes to zero
+            //then seconds and millis can be zero
+            if ((int)fromCal.get(Calendar.HOUR_OF_DAY) == 0
+                    && (int)fromCal.get(Calendar.MINUTE) == 0) {
+                fromCal.set(Calendar.SECOND, 0);
+                fromCal.set(Calendar.MILLISECOND, 0);
             }
 
             // Adding selected time in result calendar
@@ -383,9 +410,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
 
         if (button.getId() == R.id.radio_custom) {
             // if checking out custom radio button
-            String title = isChecked ? dateFormat.format(calendarView.getSelectedDate().getDate()) : SCREEN_TITLE;
-            //collapsingToolbar.setTitle(title);
-            getSupportActionBar().setTitle(title);
+            getSupportActionBar().setTitle(isChecked ? dateFormat.format(calendarView.getSelectedDate().getDate()) : SCREEN_TITLE);
             View view = findViewById(R.id.layout_custom);
             view.setVisibility(view.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
         }

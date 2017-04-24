@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import in.teramatrix.rangepicker.TimePicker;
@@ -21,7 +22,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        format = new SimpleDateFormat("dd MMM yyyy hh:mm a");
+        format = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
         findViewById(R.id.button).setOnClickListener(this);
         textView = (TextView) findViewById(R.id.text_view);
     }
@@ -29,9 +30,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(this, TimePicker.class);
-        /*Calendar calendar = Calendar.getInstance();
+        intent.putExtra(TimePicker.TIME_FORMAT, new SimpleDateFormat("HH:mm"));
+        intent.putExtra(TimePicker.DATE_FORMAT, new SimpleDateFormat("dd MMM yyyy"));
+
+        Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -2);
-        intent.putExtra(TimePicker.TIME, calendar);*/
+        intent.putExtra(TimePicker.DAY, calendar);
+
         startActivityForResult(intent, 1992);
     }
 
