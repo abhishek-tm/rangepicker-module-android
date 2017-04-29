@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.NestedScrollView;
@@ -32,9 +33,13 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import static java.util.Calendar.DAY_OF_MONTH;
+import static java.util.Calendar.HOUR;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
+import static java.util.Calendar.MONTH;
 import static java.util.Calendar.SECOND;
+import static java.util.Calendar.YEAR;
 
 /**
  * One and only {@link AppCompatActivity} to handle this library. It is a simple range picker can be used in
@@ -55,7 +60,7 @@ import static java.util.Calendar.SECOND;
  * @since Version 1.0.0
  */
 public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, View.OnClickListener,
-        TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener/*, View.OnTouchListener*/,
+        TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener,
         AppBarLayout.OnOffsetChangedListener {
 
     /**
@@ -126,6 +131,10 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
      */
     public static final String FROM = "FROM";
     /**
+     * A final tag to denote type of filter.
+     */
+    public static final String FILTER = "filter";
+    /**
      * A final tag to input custom {@link Calendar} instance before opening time picker activity.
      */
     public static final String DAY = "DAY";
@@ -143,12 +152,29 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
      */
     public static final String SCREEN_TITLE = "Data Setting";
 
+    /**
+     * A calendar instance to maintain 'from' date whenever user clicks on any {@link RadioButton}.
+     * This will be submitted as a final result.
+     */
+    private static final Calendar calendarFrom = Calendar.getInstance();
+    /**
+     * A calendar instance to maintain 'to' date whenever user clicks on any {@link RadioButton}.
+     * This will be submitted as a final result.
+     */
+    private static final Calendar calendarTo = Calendar.getInstance();
+    /**
+     * It is just to hold last selection of user. It will be also returned in activity results.
+     */
+    private static Filter filter;
+
     @Override
     @SuppressLint("SimpleDateFormat")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_time_picker);
-        // Default setting of date time formats
+        // Default setting of date time formats and selected filter
+        filter = getIntent().getSerializableExtra(FILTER) == null ? Filter.TWELVE_HOURS
+                : (Filter) getIntent().getSerializableExtra(FILTER);
         dateFormat = getIntent().getSerializableExtra(DATE_FORMAT) == null ? new SimpleDateFormat("dd MMM yyyy")
                 : (SimpleDateFormat) getIntent().getSerializableExtra(DATE_FORMAT);
         timeFormat = getIntent().getSerializableExtra(TIME_FORMAT) == null ? new SimpleDateFormat("HH:mm")
@@ -165,10 +191,6 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         calendarView.setCurrentDate(temp);
         calendarView.setSelected(true);
         calendarView.setOnDateChangedListener(this);
-
-        // Scrollview must be after action bar, and it should be sticky in nature
-        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nested_scrollview);
-        nestedScrollView.setNestedScrollingEnabled(false);
 
         // setting up custom toolbar to the activity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -188,10 +210,13 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar_layout);
         appBarLayout.addOnOffsetChangedListener(this);
 
+        // Scrollview must be after action bar, and it should be sticky in nature
+        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nested_scrollview);
+        nestedScrollView.setNestedScrollingEnabled(false);
+
         // Initializing calendar view with the current date
         Calendar calendar = Calendar.getInstance();
         picker = TimePickerDialog.newInstance(this, calendar.get(HOUR_OF_DAY), calendar.get(MINUTE), false);
-        String currentTime = timeFormat.format(calendar.getTime());
 
         // For custom time selection, these two text-views have been used
         findViewById(R.id.txt_from_custom).setOnClickListener(this);
@@ -201,54 +226,76 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         radio1Hour = (RadioButton) findViewById(R.id.radio_1_hour);
         radio1Hour.setOnCheckedChangeListener(this);
         setTime(R.id.txt_from_1_hour, -1);
-        setTime(R.id.txt_to_1_hour, currentTime);
+        setTime(R.id.txt_to_1_hour, 0);
 
         // for the preset of six hours
         radio6Hours = (RadioButton) findViewById(R.id.radio_6_hours);
         radio6Hours.setOnCheckedChangeListener(this);
         setTime(R.id.txt_from_6_hours, -6);
-        setTime(R.id.txt_to_6_hours, currentTime);
+        setTime(R.id.txt_to_6_hours, 0);
 
         // for the preset of twelve hours
         radio12Hours = (RadioButton) findViewById(R.id.radio_12_hours);
-        radio12Hours.setChecked(true);
         radio12Hours.setOnCheckedChangeListener(this);
         setTime(R.id.txt_from_12_hours, -12);
-        setTime(R.id.txt_to_12_hours, currentTime);
+        setTime(R.id.txt_to_12_hours, 0);
+        calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_12_hours).getTag()).getTime());
+        calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_12_hours).getTag()).getTime());
 
         // for the preset of twenty four hours
         radio24Hours = (RadioButton) findViewById(R.id.radio_24_hours);
         radio24Hours.setOnCheckedChangeListener(this);
         setTime(R.id.txt_from_24_hours, -24);
-        setTime(R.id.txt_to_24_hours, currentTime);
-
-        Calendar manual = Calendar.getInstance();
-        manual.set(Calendar.HOUR, 0);
-        manual.set(Calendar.HOUR_OF_DAY, 0);
-        manual.set(Calendar.MINUTE, 0);
-        manual.set(Calendar.SECOND, 0);
-        manual.set(Calendar.MILLISECOND, 0);
+        setTime(R.id.txt_to_24_hours, 0);
 
         // for the custom time selection
         radioCustom = (RadioButton) findViewById(R.id.radio_custom);
         radioCustom.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_custom, FROM + "\n" + timeFormat.format(manual.getTime()));
-        setTime(R.id.txt_to_custom, TO + "\n" + currentTime);
+        setTime(R.id.txt_from_custom, 0, -Calendar.getInstance().get(HOUR_OF_DAY), 0);
+
+        Calendar selected = calendarView.getSelectedDate().getCalendar();
+        if (selected.get(DAY_OF_MONTH) == calendar.get(DAY_OF_MONTH)
+                && selected.get(MONTH) == calendar.get(MONTH)
+                && selected.get(YEAR) == calendar.get(YEAR)) {
+            setTime(R.id.txt_to_custom, 0);
+        } else {
+            setTime(R.id.txt_to_custom, 0, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
+        }
 
         // for today's time range selection
         radioToday = (RadioButton) findViewById(R.id.radio_today);
         radioToday.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_today, timeFormat.format(manual.getTime()));
-        setTime(R.id.txt_to_today, currentTime);
+        setTime(R.id.txt_from_today, 0, -Calendar.getInstance().get(HOUR_OF_DAY), 0);
+        setTime(R.id.txt_to_today, 0);
 
         // for the time range of previous day
         radioYesterday = (RadioButton) findViewById(R.id.radio_yesterday);
         radioYesterday.setOnCheckedChangeListener(this);
-        setTime(R.id.txt_from_yesterday, timeFormat.format(manual.getTime()));
+        setTime(R.id.txt_from_yesterday, -1, -Calendar.getInstance().get(HOUR_OF_DAY), 0);
+        setTime(R.id.txt_to_yesterday, -1, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
 
-        manual.set(Calendar.HOUR_OF_DAY, 23);
-        manual.set(Calendar.MINUTE, 59);
-        setTime(R.id.txt_to_yesterday, timeFormat.format(manual.getTime()));
+        switch (filter) {
+            case ONE_HOUR:
+                radio1Hour.setChecked(true);
+                break;
+            case SIX_HOURS:
+                radio6Hours.setChecked(true);
+                break;
+            case TWELVE_HOURS:
+                radio12Hours.setChecked(true);
+                break;
+            case TWENTY_FOUR_HOURS:
+                radio24Hours.setChecked(true);
+                break;
+            case TODAY:
+                radioToday.setChecked(true);
+                break;
+            case YESTERDAY:
+                radioYesterday.setChecked(true);
+                break;
+            default:
+                radioCustom.setChecked(true);
+        }
     }
 
     @Override
@@ -267,66 +314,12 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             // On pressing back button in action bar
             onBackPressed();
         } else {
-            Date to;
-            Date from;
-            Calendar toCal = Calendar.getInstance();
-            Calendar fromCal = Calendar.getInstance();
-
-            // Detecting which preset is selected
-            if (radio1Hour.isChecked()) {
-                to = getTime(R.id.txt_to_1_hour, null);
-                fromCal = (Calendar) findViewById(R.id.txt_from_1_hour).getTag();
-            } else if (radio6Hours.isChecked()) {
-                to = getTime(R.id.txt_to_6_hours, null);
-                fromCal = (Calendar) findViewById(R.id.txt_from_6_hours).getTag();
-            } else if (radio12Hours.isChecked()) {
-                to = getTime(R.id.txt_to_12_hours, null);
-                fromCal = (Calendar) findViewById(R.id.txt_from_12_hours).getTag();
-            } else if (radio24Hours.isChecked()) {
-                to = getTime(R.id.txt_to_24_hours, null);
-                fromCal = (Calendar) findViewById(R.id.txt_from_24_hours).getTag();
-            } else if (radioToday.isChecked()) {
-                to = getTime(R.id.txt_to_today, null);
-                from = getTime(R.id.txt_from_today, null);
-                fromCal.set(Calendar.HOUR_OF_DAY, from.getHours());
-                fromCal.set(Calendar.MINUTE, from.getMinutes());
-            } else if (radioYesterday.isChecked()) {
-                to = getTime(R.id.txt_to_yesterday, null);
-                from = getTime(R.id.txt_from_yesterday, null);
-                toCal.add(Calendar.DAY_OF_MONTH, -1);
-                fromCal.add(Calendar.DAY_OF_MONTH, -1);
-                fromCal.set(Calendar.HOUR_OF_DAY, from.getHours());
-                fromCal.set(Calendar.MINUTE, from.getMinutes());
-            } else {
-                // If custom range selected/checked
-                to = getTime(R.id.txt_to_custom, TO + "\n");
-                from = getTime(R.id.txt_from_custom, FROM + "\n");
-                toCal.setTime(calendarView.getSelectedDate().getDate());
-                fromCal.setTime(calendarView.getSelectedDate().getDate());
-                fromCal.set(Calendar.HOUR_OF_DAY, from.getHours());
-                fromCal.set(Calendar.MINUTE, from.getMinutes());
-            }
-
-           // int min=
-
-            //Another check for milliseconds and seconds
-            //if user selects hour and minutes to zero
-            //then seconds and millis can be zero
-            if ((int)fromCal.get(Calendar.HOUR_OF_DAY) == 0
-                    && (int)fromCal.get(Calendar.MINUTE) == 0) {
-                fromCal.set(Calendar.SECOND, 0);
-                fromCal.set(Calendar.MILLISECOND, 0);
-            }
-
-            // Adding selected time in result calendar
-            toCal.set(Calendar.HOUR_OF_DAY, to.getHours());
-            toCal.set(Calendar.MINUTE, to.getMinutes());
-
             // Finally packaging both dates
             // And submitting the results
             Intent intent = new Intent();
-            intent.putExtra(TO, toCal);
-            intent.putExtra(FROM, fromCal);
+            intent.putExtra(FILTER, filter);
+            intent.putExtra(TO, calendarTo);
+            intent.putExtra(FROM, calendarFrom);
             setResult(RESULT_OK, intent);
             finish();
             overridePendingTransition(R.anim.zoom_in, R.anim.zoom_out);
@@ -337,7 +330,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
 
     @Override
     @SuppressWarnings("ConstantConditions")
-    public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
+    public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean bool) {
         if (date.getDate().after(new Date())) {
             // if user select date ahead of current date
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -348,55 +341,60 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             getSupportActionBar().setTitle(dateFormat.format(date.getDate()));
             // collapsing app bar layout again
             appBarLayout.setExpanded(false, true);
+
+            setTime(R.id.txt_from_custom, date.getCalendar(), false);
+            setTime(R.id.txt_to_custom, date.getCalendar(), false);
+            onCheckedChanged(radioCustom, true);
         }
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public void onClick(View view) {
-        try {
+        if (view.getId() == R.id.toolbar) {
+            // if user clicks on 'action bar', expanding calendar
+            if (getSupportActionBar() != null)
+            getSupportActionBar().setTitle(radioCustom.isChecked() ? "" : SCREEN_TITLE);
+            appBarLayout.setExpanded(radioCustom.isChecked(), radioCustom.isChecked());
+        } else {
+            // If user clicks on 'from' time in custom selection
+            Calendar tagged = (Calendar) view.getTag();
+            picker.initialize(this, tagged.get(HOUR_OF_DAY), tagged.get(MINUTE), tagged.get(SECOND), false);
             if (view.getId() == R.id.txt_from_custom) {
-                // If user clicks on 'from' time in custom selection
-                Date date = timeFormat.parse(((TextView) view).getText().toString().replace(FROM + "\n", "").trim());
-                picker.initialize(this, date.getHours(), date.getMinutes(), date.getSeconds(), false);
-
-                // Making validation and showing up picker time dialog
-                Date temp = getTime(R.id.txt_to_custom, TO + "\n");
-                picker.setMaxTime(temp.getHours(), temp.getMinutes(), temp.getSeconds());
+                // Making validation and showing up picker time dialog for "from" time
+                Calendar temp = (Calendar) findViewById(R.id.txt_to_custom).getTag();
+                picker.setMaxTime(temp.get(HOUR_OF_DAY), temp.get(MINUTE), temp.get(SECOND));
                 picker.setTitle(FROM);
                 picker.show(getFragmentManager(), FROM);
-            } else if (view.getId() == R.id.txt_to_custom) {
-                // If user clicks on 'to' time in custom selection
-                Date date = timeFormat.parse(((TextView) view).getText().toString().replace(TO + "\n", "").trim());
-                picker.initialize(this, date.getHours(), date.getMinutes(), date.getSeconds(), false);
-
-                // Making validation and showing up picker time dialog
-                Date temp = getTime(R.id.txt_from_custom, FROM + "\n");
+            } else {
+                // Making validation and showing up picker time dialog for "to" time
+                Date temp = getTime(R.id.txt_from_custom);
                 picker.setMinTime(temp.getHours(), temp.getMinutes(), temp.getSeconds());
+                Calendar current = Calendar.getInstance();
+                Calendar selected = calendarView.getSelectedDate().getCalendar();
+                if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
+                        && selected.get(MONTH) == current.get(MONTH)
+                        && selected.get(YEAR) == current.get(YEAR)) {
+
+                    // Setting up maximum time if selected date is today's date
+                    picker.setMaxTime(current.get(HOUR_OF_DAY), current.get(MINUTE), current.get(SECOND));
+                } else {
+                    picker.setMaxTime(23, 59, 59);
+                }
                 picker.setTitle(TO);
                 picker.show(getFragmentManager(), TO);
-            } else {
-                // if user clicks on 'action bar', expanding calendar
-                getSupportActionBar().setTitle(radioCustom.isChecked() ? "" : SCREEN_TITLE);
-                appBarLayout.setExpanded(radioCustom.isChecked(), radioCustom.isChecked());
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
     public void onTimeSet(RadialPickerLayout view, int hourOfDay, int minute, int second) {
-        Calendar calc = Calendar.getInstance();
-        calc.set(HOUR_OF_DAY, hourOfDay);
-        calc.set(MINUTE, minute);
-        calc.set(SECOND, second);
-
-        // displaying selected time on respective text-views
-        TextView txtView = ((TextView) findViewById(picker.getTitle().contains(FROM)
-                ? R.id.txt_from_custom : R.id.txt_to_custom));
-        txtView.setText((picker.getTitle().contains(FROM) ? FROM : TO) + "\n" +
-                timeFormat.format(calc.getTime()).toUpperCase());
+        Calendar selected = calendarView.getSelectedDate().getCalendar();
+        selected.set(HOUR_OF_DAY, hourOfDay);
+        selected.set(MINUTE, minute);
+        selected.set(SECOND, second);
+        setTime(picker.getTitle().contains(FROM) ? R.id.txt_from_custom : R.id.txt_to_custom, selected, true);
+        onCheckedChanged(radioCustom, true);
     }
 
     @Override
@@ -405,14 +403,58 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         appBarLayout.setExpanded(false, true);
         if (isChecked) {
             // Making selection of only single radio button
-            selectRadioButton(button);
+            radio1Hour.setChecked(false);
+            radio6Hours.setChecked(false);
+            radio12Hours.setChecked(false);
+            radio24Hours.setChecked(false);
+            radioCustom.setChecked(false);
+            radioToday.setChecked(false);
+            radioYesterday.setChecked(false);
+
+            // Only clicked radio button should be selected
+            button.setChecked(true);
+            findViewById(R.id.layout_custom).setVisibility(radioCustom.isChecked() ? View.VISIBLE : View.GONE);
         }
 
-        if (button.getId() == R.id.radio_custom) {
+        if (button.getId() == R.id.radio_1_hour) {
+            filter = Filter.ONE_HOUR;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_1_hour).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_1_hour).getTag()).getTime());
+        } else if (button.getId() == R.id.radio_6_hours) {
+            filter = Filter.SIX_HOURS;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_6_hours).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_6_hours).getTag()).getTime());
+        } else if (button.getId() == R.id.radio_12_hours) {
+            filter = Filter.TWELVE_HOURS;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_12_hours).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_12_hours).getTag()).getTime());
+        } else if (button.getId() == R.id.radio_24_hours) {
+            filter = Filter.TWENTY_FOUR_HOURS;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_24_hours).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_24_hours).getTag()).getTime());
+        } else if (button.getId() == R.id.radio_today) {
+            filter = Filter.TODAY;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_today).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_today).getTag()).getTime());
+        } else if (button.getId() == R.id.radio_yesterday) {
+            filter = Filter.YESTERDAY;
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_yesterday).getTag()).getTime());
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_yesterday).getTag()).getTime());
+        } else {
             // if checking out custom radio button
+            filter = Filter.CUSTOM;
             getSupportActionBar().setTitle(isChecked ? dateFormat.format(calendarView.getSelectedDate().getDate()) : SCREEN_TITLE);
-            View view = findViewById(R.id.layout_custom);
-            view.setVisibility(view.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+
+            Calendar selected = calendarView.getSelectedDate().getCalendar();
+            calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_custom).getTag()).getTime());
+            calendarFrom.set(DAY_OF_MONTH, selected.get(DAY_OF_MONTH));
+            calendarFrom.set(MONTH, selected.get(MONTH));
+            calendarFrom.set(YEAR, selected.get(YEAR));
+
+            calendarTo.setTime(((Calendar) findViewById(R.id.txt_to_custom).getTag()).getTime());
+            calendarTo.set(DAY_OF_MONTH, selected.get(DAY_OF_MONTH));
+            calendarTo.set(MONTH, selected.get(MONTH));
+            calendarTo.set(YEAR, selected.get(YEAR));
         }
     }
 
@@ -425,52 +467,19 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     }
 
     /**
-     * A method to deselect/un-check all the visible radio buttons. Only passed radio button
-     * will be checked.
-     *
-     * @param radio radio button which will be set up selected/checked
-     */
-    private void selectRadioButton(CompoundButton radio) {
-        radio1Hour.setChecked(false);
-        radio6Hours.setChecked(false);
-        radio12Hours.setChecked(false);
-        radio24Hours.setChecked(false);
-        radioCustom.setChecked(false);
-        radioToday.setChecked(false);
-        radioYesterday.setChecked(false);
-
-        // clicked radio button should be selected
-        radio.setChecked(true);
-    }
-
-    /**
      * A method to get parsed {@link Date} instance from the text set up on {@link TextView}.
      *
-     * @param id       it is the id of {@link TextView} which text will be used to make {@link Date}
-     * @param truncate if there's something to be removed from the string of {@link TextView}
+     * @param id it is the id of {@link TextView} which text will be used to make {@link Date}
      * @return date instance using text on text-view
      */
-    private Date getTime(int id, String truncate) {
+    private Date getTime(int id) {
         try {
             TextView textView = (TextView) findViewById(id);
-            return timeFormat.parse(truncate == null
-                    ? textView.getText().toString()
-                    : textView.getText().toString().replace(truncate, "").trim());
+            return timeFormat.parse(textView.getText().toString());
         } catch (ParseException e) {
             e.printStackTrace();
             return new Date();
         }
-    }
-
-    /**
-     * A simple method to set up time on {@link TextView}.
-     *
-     * @param id   it is the id of {@link TextView} on which the time will displayed
-     * @param time formatted time
-     */
-    private void setTime(int id, String time) {
-        TextView textView = (TextView) findViewById(id);
-        textView.setText(time);
     }
 
     /**
@@ -482,7 +491,13 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     private void setTime(int id, int hours) {
         TextView textView = (TextView) findViewById(id);
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR, hours);
+        calendar.add(HOUR, hours);
+        // Checking whether time format contains seconds or not
+        // If it doesn't contain seconds, then seconds will be set to zero
+        if (!timeFormat.toPattern().toLowerCase().contains("s")) {
+            calendar.set(SECOND, 0);
+        }
+
         textView.setText(timeFormat.format(calendar.getTime()));
         textView.setTag(calendar);
     }
@@ -490,14 +505,49 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     /**
      * A simple method to set up time on {@link TextView}.
      *
-     * @param id     it is the id of {@link TextView} on which the time will displayed
-     * @param hours  number of hours which will be subtracted/added in the current time
-     * @param prefix if there's something to be prefixed in the string
+     * @param id it is the id of {@link TextView} on which the time will displayed
      */
-    private void setTime(int id, int hours, String prefix) {
+    private void setTime(int id, int days, int hours, @Nullable Integer integer) {
         TextView textView = (TextView) findViewById(id);
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR, hours);
-        textView.setText(prefix.concat(timeFormat.format(calendar.getTime())));
+        calendar.add(DAY_OF_MONTH, days);
+        calendar.add(HOUR, hours);
+        if (integer != null) {
+            calendar.set(MINUTE, integer);
+            calendar.set(SECOND, integer);
+        }
+        textView.setText(timeFormat.format(calendar.getTime()));
+        textView.setTag(calendar);
+    }
+
+    /**
+     * A simple method to set up time on {@link TextView}.
+     * * @param id it is the id of {@link TextView} on which the time will displayed
+     *
+     * @param selected date to be set up
+     */
+    private void setTime(int id, Calendar selected, boolean toBeSet) {
+        TextView textView = (TextView) findViewById(id);
+        Calendar tagged = (Calendar) textView.getTag();
+        tagged.set(DAY_OF_MONTH, selected.get(DAY_OF_MONTH));
+        tagged.set(MONTH, selected.get(MONTH));
+        tagged.set(YEAR, selected.get(YEAR));
+        if (toBeSet) {
+            tagged.set(HOUR_OF_DAY, selected.get(HOUR_OF_DAY));
+            tagged.set(MINUTE, selected.get(MINUTE));
+            tagged.set(SECOND, selected.get(SECOND));
+            textView.setText(timeFormat.format(tagged.getTime()));
+        }
+        textView.setTag(tagged);
+    }
+
+    public enum Filter {
+        ONE_HOUR,
+        SIX_HOURS,
+        TWELVE_HOURS,
+        TWENTY_FOUR_HOURS,
+        TODAY,
+        YESTERDAY,
+        CUSTOM
     }
 }
