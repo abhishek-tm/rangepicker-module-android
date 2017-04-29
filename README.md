@@ -28,7 +28,7 @@ allprojects {
 And add the following dependency to your app level `build.gradle` file:
 ```groovy
 dependencies {
-    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.1'
+    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.2'
 }
 ```
 
