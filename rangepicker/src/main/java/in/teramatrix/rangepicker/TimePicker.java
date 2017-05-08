@@ -253,10 +253,8 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         radioCustom.setOnCheckedChangeListener(this);
         setTime(R.id.txt_from_custom, 0, -Calendar.getInstance().get(HOUR_OF_DAY), 0);
 
-        Calendar selected = calendarView.getSelectedDate().getCalendar();
-        if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
-                && selected.get(MONTH) == current.get(MONTH)
-                && selected.get(YEAR) == current.get(YEAR)) {
+
+        if (isSimilar(calendarView.getSelectedDate().getCalendar(), current)) {
             setTime(R.id.txt_to_custom, 0);
         } else {
             setTime(R.id.txt_to_custom, 0, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
@@ -342,12 +340,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             // collapsing app bar layout again
             appBarLayout.setExpanded(false, true);
 
-            Calendar selected = date.getCalendar();
-            Calendar current = Calendar.getInstance();
-
-            if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
-                    && selected.get(MONTH) == current.get(MONTH)
-                    && selected.get(YEAR) == current.get(YEAR)) {
+            if (isSimilar(date.getCalendar(), Calendar.getInstance())) {
                 setTime(R.id.txt_to_custom, 0);
             } else {
                 setTime(R.id.txt_to_custom, 0, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
@@ -365,7 +358,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         if (view.getId() == R.id.toolbar) {
             // if user clicks on 'action bar', expanding calendar
             if (getSupportActionBar() != null)
-            getSupportActionBar().setTitle(radioCustom.isChecked() ? "" : SCREEN_TITLE);
+                getSupportActionBar().setTitle(radioCustom.isChecked() ? "" : SCREEN_TITLE);
             appBarLayout.setExpanded(radioCustom.isChecked(), radioCustom.isChecked());
         } else {
             // If user clicks on 'from' time in custom selection
@@ -377,17 +370,13 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
                 picker.setMaxTime(temp.get(HOUR_OF_DAY), temp.get(MINUTE), temp.get(SECOND));
                 picker.setTitle(FROM);
                 if (!picker.isVisible())
-                picker.show(getFragmentManager(), FROM);
+                    picker.show(getFragmentManager(), FROM);
             } else {
                 // Making validation and showing up picker time dialog for "to" time
                 Date temp = getTime(R.id.txt_from_custom);
                 picker.setMinTime(temp.getHours(), temp.getMinutes(), temp.getSeconds());
                 Calendar current = Calendar.getInstance();
-                Calendar selected = calendarView.getSelectedDate().getCalendar();
-                if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
-                        && selected.get(MONTH) == current.get(MONTH)
-                        && selected.get(YEAR) == current.get(YEAR)) {
-
+                if (isSimilar(calendarView.getSelectedDate().getCalendar(), current)) {
                     // Setting up maximum time if selected date is today's date
                     picker.setMaxTime(current.get(HOUR_OF_DAY), current.get(MINUTE), current.get(SECOND));
                 } else {
@@ -395,7 +384,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
                 }
                 picker.setTitle(TO);
                 if (!picker.isVisible())
-                picker.show(getFragmentManager(), TO);
+                    picker.show(getFragmentManager(), TO);
             }
         }
     }
@@ -493,6 +482,19 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             e.printStackTrace();
             return new Date();
         }
+    }
+
+    /**
+     * A method to compare two dates on the basis of day, month and year
+     *
+     * @param c1 first date to compare
+     * @param c2 second date to compare
+     * @return true if these three parameter match otherwise false
+     */
+    private boolean isSimilar(Calendar c1, Calendar c2) {
+        return c1.get(DAY_OF_MONTH) == c2.get(DAY_OF_MONTH)
+                && c1.get(MONTH) == c2.get(MONTH)
+                && c1.get(YEAR) == c2.get(YEAR);
     }
 
     /**
