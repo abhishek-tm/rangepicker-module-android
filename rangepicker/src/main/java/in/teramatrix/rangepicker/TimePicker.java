@@ -215,8 +215,8 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         nestedScrollView.setNestedScrollingEnabled(false);
 
         // Initializing calendar view with the current date
-        Calendar calendar = Calendar.getInstance();
-        picker = TimePickerDialog.newInstance(this, calendar.get(HOUR_OF_DAY), calendar.get(MINUTE), false);
+        Calendar current = Calendar.getInstance();
+        picker = TimePickerDialog.newInstance(this, current.get(HOUR_OF_DAY), current.get(MINUTE), false);
 
         // For custom time selection, these two text-views have been used
         findViewById(R.id.txt_from_custom).setOnClickListener(this);
@@ -254,9 +254,9 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         setTime(R.id.txt_from_custom, 0, -Calendar.getInstance().get(HOUR_OF_DAY), 0);
 
         Calendar selected = calendarView.getSelectedDate().getCalendar();
-        if (selected.get(DAY_OF_MONTH) == calendar.get(DAY_OF_MONTH)
-                && selected.get(MONTH) == calendar.get(MONTH)
-                && selected.get(YEAR) == calendar.get(YEAR)) {
+        if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
+                && selected.get(MONTH) == current.get(MONTH)
+                && selected.get(YEAR) == current.get(YEAR)) {
             setTime(R.id.txt_to_custom, 0);
         } else {
             setTime(R.id.txt_to_custom, 0, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
@@ -342,6 +342,17 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             // collapsing app bar layout again
             appBarLayout.setExpanded(false, true);
 
+            Calendar selected = date.getCalendar();
+            Calendar current = Calendar.getInstance();
+
+            if (selected.get(DAY_OF_MONTH) == current.get(DAY_OF_MONTH)
+                    && selected.get(MONTH) == current.get(MONTH)
+                    && selected.get(YEAR) == current.get(YEAR)) {
+                setTime(R.id.txt_to_custom, 0);
+            } else {
+                setTime(R.id.txt_to_custom, 0, 23 - Calendar.getInstance().get(HOUR_OF_DAY), 59);
+            }
+
             setTime(R.id.txt_from_custom, date.getCalendar(), false);
             setTime(R.id.txt_to_custom, date.getCalendar(), false);
             onCheckedChanged(radioCustom, true);
@@ -359,12 +370,13 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         } else {
             // If user clicks on 'from' time in custom selection
             Calendar tagged = (Calendar) view.getTag();
-            picker.initialize(this, tagged.get(HOUR_OF_DAY), tagged.get(MINUTE), tagged.get(SECOND), false);
+            picker.initialize(this, tagged.get(HOUR_OF_DAY), tagged.get(MINUTE), tagged.get(SECOND), timeFormat.toPattern().contains("H"));
             if (view.getId() == R.id.txt_from_custom) {
                 // Making validation and showing up picker time dialog for "from" time
                 Calendar temp = (Calendar) findViewById(R.id.txt_to_custom).getTag();
                 picker.setMaxTime(temp.get(HOUR_OF_DAY), temp.get(MINUTE), temp.get(SECOND));
                 picker.setTitle(FROM);
+                if (!picker.isVisible())
                 picker.show(getFragmentManager(), FROM);
             } else {
                 // Making validation and showing up picker time dialog for "to" time
@@ -382,6 +394,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
                     picker.setMaxTime(23, 59, 59);
                 }
                 picker.setTitle(TO);
+                if (!picker.isVisible())
                 picker.show(getFragmentManager(), TO);
             }
         }
