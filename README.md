@@ -50,7 +50,29 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     }
 }
 ```
-That's all! :wink:
+
+### Customizations
+* If you want to set custom date and time format for preview, you can simply pass it to intent.
+
+```java
+  intent.putExtra(TimePicker.TIME_FORMAT, new SimpleDateFormat("hh:mm a"));
+  intent.putExtra(TimePicker.DATE_FORMAT, new SimpleDateFormat("dd MMM yyyy"));
+```
+
+* To set a particular date for custom selection, pass **Calendar** instance of any date to intent.
+```java
+  Calendar calendar = Calendar.getInstance();
+  calendar.set(Calendar.DATE, 12);
+  calendar.set(Calendar.MONTH, 1);
+  intent.putExtra(TimePicker.DAY, calendar);
+```
+
+* To select particular preset, pass enumeration. 
+```java
+  intent.putExtra(TimePicker.FILTER, TimePicker.Filter.TODAY);
+```
+
+That's all!
 
 ### License
 Copyright (C) 2017  Teramatrix Technologies Private Limited
