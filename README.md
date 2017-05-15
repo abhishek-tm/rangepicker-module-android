@@ -3,34 +3,13 @@ It is a simple range picker can be used in most common scenarios where you've to
 
 If you really dont want to waste time on making a simple time range picker, this is good for you. In this version, there's not too much customizations in this library/time picker screen. But in future, customizations can be done according response of people.
 <div>
-<img src="/wiki/preset.png" width="280" alt="Presets"/>
-<img src="/wiki/custom.png" width="280" alt="Custom Time Selection"/>
-<img src="/wiki/calendar.png" width="280" alt="Custom Date Selection"/>
+<img src="https://github.com/abhishek-tm/rangepicker-module-android/blob/master/wiki/preset.png" width="280" alt="Presets"/>
+<img src="https://github.com/abhishek-tm/rangepicker-module-android/blob/master/wiki/custom.png" width="280" alt="Custom Time Selection"/>
+<img src="https://github.com/abhishek-tm/rangepicker-module-android/blob/master/wiki/calendar.png" width="280" alt="Custom Date Selection"/>
 </div>
 
 
-### How to add library?
-
-Simply add the following repositories to your project level `build.gradle` file:
-
-```groovy
-allprojects {
-    repositories {
-        jcenter()
-
-        maven {
-            url = 'https://jitpack.io'
-        }
-    }
-}
-```
-
-And add the following dependency to your app level `build.gradle` file:
-```groovy
-dependencies {
-    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.3'
-}
-```
+#
 
 ### How to use it?
 This range picker is an 'Activity for Results'. So simply launch it with a response code like below...
