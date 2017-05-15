@@ -11,7 +11,7 @@ If you really dont want to waste time on making a simple time range picker, this
 
 ### How to add library?
 
-Simply add the following repositories to your project level `build.gradle` file:
+Simply add the following repositories to your project level **build.gradle** file:
 
 ```groovy
 allprojects {
@@ -25,7 +25,7 @@ allprojects {
 }
 ```
 
-And add the following dependency to your app level `build.gradle` file:
+And add the following dependency to your app level **build.gradle** file:
 ```groovy
 dependencies {
     compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.3'
@@ -33,12 +33,12 @@ dependencies {
 ```
 
 ### How to use it?
-This range picker is an 'Activity for Results'. So simply launch it with a response code like below...
+This range picker is an _Activity for Results_. So simply launch it with a response code like below...
 
 ```java
 startActivityForResult(new Intent(this, TimePicker.class), 1992);
 ```
-And obtain the results in 'onActivityResult()' as following...
+And obtain the results in `onActivityResult()` as following...
 
 ```java
 @Override
@@ -59,7 +59,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
   intent.putExtra(TimePicker.DATE_FORMAT, new SimpleDateFormat("dd MMM yyyy"));
 ```
 
-* To set a particular date for custom selection, pass **Calendar** instance of any date to intent.
+* To set a particular date for custom selection, pass `Calendar` instance of any date to intent.
 ```java
   Calendar calendar = Calendar.getInstance();
   calendar.set(Calendar.DATE, 12);
@@ -67,7 +67,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
   intent.putExtra(TimePicker.DAY, calendar);
 ```
 
-* To select particular preset, pass enumeration. 
+* To select particular preset, pass `Filter` enumeration defined in `TimePicker.class`. 
 ```java
   intent.putExtra(TimePicker.FILTER, TimePicker.Filter.TODAY);
 ```
