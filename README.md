@@ -9,7 +9,28 @@ If you really dont want to waste time on making a simple time range picker, this
 </div>
 
 
-#
+### How to add library?
+
+Simply add the following repositories to your project level `build.gradle` file:
+
+```groovy
+allprojects {
+    repositories {
+        jcenter()
+
+        maven {
+            url = 'https://jitpack.io'
+        }
+    }
+}
+```
+
+And add the following dependency to your app level `build.gradle` file:
+```groovy
+dependencies {
+    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.3'
+}
+```
 
 ### How to use it?
 This range picker is an 'Activity for Results'. So simply launch it with a response code like below...
