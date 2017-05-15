@@ -72,8 +72,6 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
   intent.putExtra(TimePicker.FILTER, TimePicker.Filter.TODAY);
 ```
 
-That's all!
-
 ### License
 Copyright (C) 2017  Teramatrix Technologies Private Limited
 
