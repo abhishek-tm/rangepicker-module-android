@@ -28,7 +28,7 @@ allprojects {
 And add the following dependency to your app level **build.gradle** file:
 ```groovy
 dependencies {
-    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.3'
+    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.4'
 }
 ```
 
@@ -70,6 +70,11 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 * To select particular preset, pass `Filter` enumeration defined in `TimePicker.class`. 
 ```java
   intent.putExtra(TimePicker.FILTER, TimePicker.Filter.TODAY);
+```
+
+* Default title is **Data Setting**. To set up custom title on Action Bar.
+```java
+  intent.putExtra(TimePicker.SCREEN_TITLE, "Data Filter");
 ```
 
 ### License
