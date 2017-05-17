@@ -40,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // by default selected filter
         intent.putExtra(TimePicker.FILTER, filter != null ? filter : TimePicker.Filter.TODAY);
 
+        // Action bar title
+        //intent.putExtra(TimePicker.SCREEN_TITLE, "Data Filter");
+
         // Opening on a particular date for custom selection
         Calendar calendar = Calendar.getInstance();
         //calendar.add(Calendar.YEAR, -2);
