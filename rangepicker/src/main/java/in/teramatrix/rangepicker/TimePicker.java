@@ -59,6 +59,7 @@ import static java.util.Calendar.YEAR;
  * @date 24 Mar 2016
  * @since Version 1.0.0
  */
+@SuppressWarnings("JavaDoc")
 public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, View.OnClickListener,
         TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener,
         AppBarLayout.OnOffsetChangedListener {
@@ -133,7 +134,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     /**
      * A final tag to denote type of filter.
      */
-    public static final String FILTER = "filter";
+    public static final String FILTER = "FILTER";
     /**
      * A final tag to input custom {@link Calendar} instance before opening time picker activity.
      */
@@ -150,7 +151,7 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
      * This is the title of the screen. It will be set up into action bar of the activity.
      * It may be customizable in the next release so it has been declared global.
      */
-    public static final String SCREEN_TITLE = "Data Setting";
+    public static final String SCREEN_TITLE = "TITLE";
 
     /**
      * A calendar instance to maintain 'from' date whenever user clicks on any {@link RadioButton}.
@@ -203,7 +204,8 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             actionBar.setHomeAsUpIndicator(R.mipmap.ic_arrow_back_white_24dp);
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle(SCREEN_TITLE);
+            actionBar.setTitle(getIntent().getStringExtra(SCREEN_TITLE) != null
+                    ? getIntent().getStringExtra(SCREEN_TITLE) : "Data Setting");
         }
 
         // Adding offset listener to block app bar sliding on touch
@@ -310,7 +312,11 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         int id = item.getItemId();
         if (id == android.R.id.home) {
             // On pressing back button in action bar
-            onBackPressed();
+            if (!(getSupportActionBar() != null
+                    && getSupportActionBar().getTitle() != null
+                    && getSupportActionBar().getTitle().toString().trim().equals(""))) {
+                onBackPressed();
+            }
         } else {
             // Finally packaging both dates
             // And submitting the results
@@ -358,7 +364,9 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         if (view.getId() == R.id.toolbar) {
             // if user clicks on 'action bar', expanding calendar
             if (getSupportActionBar() != null)
-                getSupportActionBar().setTitle(radioCustom.isChecked() ? "" : SCREEN_TITLE);
+                getSupportActionBar().setTitle(radioCustom.isChecked()
+                        ? "" : (getIntent().getStringExtra(SCREEN_TITLE) != null
+                                ? getIntent().getStringExtra(SCREEN_TITLE) : "Data Setting"));
             appBarLayout.setExpanded(radioCustom.isChecked(), radioCustom.isChecked());
         } else {
             // If user clicks on 'from' time in custom selection
@@ -445,7 +453,10 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         } else {
             // if checking out custom radio button
             filter = Filter.CUSTOM;
-            getSupportActionBar().setTitle(isChecked ? dateFormat.format(calendarView.getSelectedDate().getDate()) : SCREEN_TITLE);
+            //if (isChecked) onClick(findViewById(R.id.toolbar));
+            getSupportActionBar().setTitle(isChecked
+                    ? dateFormat.format(calendarView.getSelectedDate().getDate()) : (getIntent().getStringExtra(SCREEN_TITLE) != null
+                    ? getIntent().getStringExtra(SCREEN_TITLE) : "Data Setting"));
 
             Calendar selected = calendarView.getSelectedDate().getCalendar();
             calendarFrom.setTime(((Calendar) findViewById(R.id.txt_from_custom).getTag()).getTime());
@@ -465,6 +476,20 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         if (!radioCustom.isChecked()) {
             // collapsing calendar if custom radio button is not checked
             appBarLayout.setExpanded(false, false);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportActionBar() != null
+        && getSupportActionBar().getTitle() != null
+        && getSupportActionBar().getTitle().toString().trim().equals("")) {
+            // collapsing app bar layout first
+            appBarLayout.setExpanded(false, true);
+            // Setting up title, it is the date selected by user with default date formatting
+            getSupportActionBar().setTitle(dateFormat.format(calendarView.getSelectedDate().getDate()));
+        } else {
+            super.onBackPressed();
         }
     }
 
