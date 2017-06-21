@@ -13,11 +13,9 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -63,8 +61,8 @@ import static java.util.Calendar.YEAR;
  * @since Version 1.0.0
  */
 @SuppressWarnings("JavaDoc")
-public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, View.OnClickListener,
-        TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener, AppBarLayout.OnOffsetChangedListener, Runnable {
+public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, Runnable,
+        View.OnClickListener, TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener {
 
     /**
      * A third party time picker dialog
@@ -213,7 +211,6 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         // Adding offset listener to block app bar sliding on touch
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar_layout);
         appBarLayout.post(this);
-        appBarLayout.addOnOffsetChangedListener(this);
 
         // Scrollview must be after action bar, and it should be sticky in nature
         ViewCompat.setNestedScrollingEnabled(findViewById(R.id.nested_scrollview), false);
@@ -298,6 +295,12 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             default:
                 radioCustom.setChecked(true);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        appBarLayout.setExpanded(false, false);
     }
 
     @Override
@@ -474,14 +477,6 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     }
 
     @Override
-    public void onOffsetChanged(final AppBarLayout appBarLayout, int verticalOffset) {
-        if (!radioCustom.isChecked()) {
-            // collapsing calendar if custom radio button is not checked
-            appBarLayout.setExpanded(false, false);
-        }
-    }
-
-    @Override
     public void run() {
         CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
         AppBarLayout.Behavior behavior = (AppBarLayout.Behavior) params.getBehavior();
@@ -597,6 +592,9 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         textView.setTag(tagged);
     }
 
+    /**
+     * This set of enum will be used to keep track on last selected preset/filter.
+     */
     public enum Filter {
         ONE_HOUR,
         SIX_HOURS,
