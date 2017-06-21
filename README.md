@@ -11,7 +11,7 @@ If you really dont want to waste time on making a simple time range picker, this
 
 ### How to add library?
 
-Simply add the following repositories to your project level `build.gradle` file:
+Simply add the following repositories to your project level **build.gradle** file:
 
 ```groovy
 allprojects {
@@ -25,20 +25,20 @@ allprojects {
 }
 ```
 
-And add the following dependency to your app level `build.gradle` file:
+And add the following dependency to your app level **build.gradle** file:
 ```groovy
 dependencies {
-    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.6' 
+    compile 'com.github.abhishek-tm:rangepicker-module-android:1.0.5'
 }
 ```
 
 ### How to use it?
-This range picker is an 'Activity for Results'. So simply launch it with a response code like below...
+This range picker is an _Activity for Results_. So simply launch it with a response code like below...
 
 ```java
 startActivityForResult(new Intent(this, TimePicker.class), 1992);
 ```
-And obtain the results in 'onActivityResult()' as following...
+And obtain the results in `onActivityResult()` as following...
 
 ```java
 @Override
@@ -50,7 +50,32 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     }
 }
 ```
-That's all! :wink:
+
+### Customizations
+* If you want to set custom date and time format for preview, you can simply pass it to intent.
+
+```java
+  intent.putExtra(TimePicker.TIME_FORMAT, new SimpleDateFormat("hh:mm a"));
+  intent.putExtra(TimePicker.DATE_FORMAT, new SimpleDateFormat("dd MMM yyyy"));
+```
+
+* To set a particular date for custom selection, pass `Calendar` instance of any date to intent.
+```java
+  Calendar calendar = Calendar.getInstance();
+  calendar.set(Calendar.DATE, 12);
+  calendar.set(Calendar.MONTH, 1);
+  intent.putExtra(TimePicker.DAY, calendar);
+```
+
+* To select particular preset, pass `Filter` enumeration defined in `TimePicker.class`. 
+```java
+  intent.putExtra(TimePicker.FILTER, TimePicker.Filter.TODAY);
+```
+
+* Default title is **Data Setting**. To set up custom title on Action Bar.
+```java
+  intent.putExtra(TimePicker.SCREEN_TITLE, "Data Filter");
+```
 
 ### License
 Copyright (C) 2017  Teramatrix Technologies Private Limited
