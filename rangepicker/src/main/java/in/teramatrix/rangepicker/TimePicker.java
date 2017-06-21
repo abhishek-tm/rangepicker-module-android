@@ -11,7 +11,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v4.widget.NestedScrollView;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -60,9 +61,8 @@ import static java.util.Calendar.YEAR;
  * @since Version 1.0.0
  */
 @SuppressWarnings("JavaDoc")
-public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, View.OnClickListener,
-        TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener,
-        AppBarLayout.OnOffsetChangedListener {
+public class TimePicker extends AppCompatActivity implements OnDateSelectedListener, Runnable,
+        View.OnClickListener, TimePickerDialog.OnTimeSetListener, CompoundButton.OnCheckedChangeListener {
 
     /**
      * A third party time picker dialog
@@ -210,11 +210,10 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
 
         // Adding offset listener to block app bar sliding on touch
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar_layout);
-        appBarLayout.addOnOffsetChangedListener(this);
+        appBarLayout.post(this);
 
         // Scrollview must be after action bar, and it should be sticky in nature
-        NestedScrollView nestedScrollView = (NestedScrollView) findViewById(R.id.nested_scrollview);
-        nestedScrollView.setNestedScrollingEnabled(false);
+        ViewCompat.setNestedScrollingEnabled(findViewById(R.id.nested_scrollview), false);
 
         // Initializing calendar view with the current date
         Calendar current = Calendar.getInstance();
@@ -296,6 +295,12 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
             default:
                 radioCustom.setChecked(true);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        appBarLayout.setExpanded(false, false);
     }
 
     @Override
@@ -472,18 +477,24 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
     }
 
     @Override
-    public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-        if (!radioCustom.isChecked()) {
-            // collapsing calendar if custom radio button is not checked
-            appBarLayout.setExpanded(false, false);
+    public void run() {
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
+        AppBarLayout.Behavior behavior = (AppBarLayout.Behavior) params.getBehavior();
+        if (behavior != null) {
+            behavior.setDragCallback(new AppBarLayout.Behavior.DragCallback() {
+                @Override
+                public boolean canDrag(@NonNull AppBarLayout appBarLayout) {
+                    return false;
+                }
+            });
         }
     }
 
     @Override
     public void onBackPressed() {
         if (getSupportActionBar() != null
-        && getSupportActionBar().getTitle() != null
-        && getSupportActionBar().getTitle().toString().trim().equals("")) {
+                && getSupportActionBar().getTitle() != null
+                && getSupportActionBar().getTitle().toString().trim().equals("")) {
             // collapsing app bar layout first
             appBarLayout.setExpanded(false, true);
             // Setting up title, it is the date selected by user with default date formatting
@@ -581,6 +592,9 @@ public class TimePicker extends AppCompatActivity implements OnDateSelectedListe
         textView.setTag(tagged);
     }
 
+    /**
+     * This set of enum will be used to keep track on last selected preset/filter.
+     */
     public enum Filter {
         ONE_HOUR,
         SIX_HOURS,
